@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your PrepGuide playbook — PrepGuide</title>
+<meta name="description" content="Your personalized PrepGuide playbook is being built. Download your PDF here when it's ready.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14110b">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html">Prep<span>Guide</span></a>
+    <nav class="nav">
+      <a href="index.html#inside">What's inside</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="centered">
+    <div class="check">📕</div>
+    <h1>Your playbook is on its way.</h1>
+    <p class="hero-sub" id="page-sub">Payment confirmed — now we're building your personalized PDF. This usually takes a few minutes.</p>
+
+    <div class="status-card" id="status-card">
+      <div class="row" id="status-row">
+        <div class="spinner" id="spinner"></div>
+        <div><strong id="status-title">Confirming your payment…</strong>
+        <div class="progress-note" id="status-note">Hang tight — checking with Stripe.</div></div>
+      </div>
+      <div id="action-zone" style="margin-top:18px" hidden></div>
+    </div>
+
+    <p class="progress-note" style="margin-top:18px">Keep this page open — it updates automatically. A copy of your private link is also on its way to your email.</p>
+    <p class="progress-note">Lost this link? Your email has you covered — or write to <a href="mailto:info@mehyar.us" style="color:var(--accent)">info@mehyar.us</a>.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="inner">
+    <span>© 2026 PrepGuide · A MehyarSoft product</span>
+    <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="mailto:info@mehyar.us">info@mehyar.us</a></span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var qs = new URLSearchParams(window.location.search);
+  var token = (qs.get("token") || qs.get("access_token") || "").trim();
+  var title = document.getElementById("status-title");
+  var note = document.getElementById("status-note");
+  var spinner = document.getElementById("spinner");
+  var actionZone = document.getElementById("action-zone");
+  var pageSub = document.getElementById("page-sub");
+
+  function setBusy(t, n) {
+    spinner.style.display = "";
+    title.textContent = t;
+    note.textContent = n || "";
+    actionZone.hidden = true;
+    actionZone.innerHTML = "";
+  }
+  function setDone(t, n, ctaHtml) {
+    spinner.style.display = "none";
+    title.textContent = t;
+    note.textContent = n || "";
+    if (ctaHtml) { actionZone.innerHTML = ctaHtml; actionZone.hidden = false; }
+  }
+  function setError(t, n, ctaHtml) {
+    spinner.style.display = "none";
+    title.textContent = t;
+    note.textContent = n || "";
+    if (ctaHtml) { actionZone.innerHTML = ctaHtml; actionZone.hidden = false; }
+  }
+
+  if (!token || token.length < 16) {
+    setError("We couldn't find your order.", "This page needs the private link from your receipt email — check your inbox and click it again.");
+    return;
+  }
+
+  var PAY_STATUS = "https://mehyar.us/api/pay/status?token=" + encodeURIComponent(token);
+  var PG_STATUS = "/api/prepguide/status?token=" + encodeURIComponent(token);
+  var started = Date.now();
+  var PAY_TIMEOUT = 120000;   // 2 min waiting for Stripe webhook
+  var BUILD_TIMEOUT = 600000; // 10 min for the playbook build
+
+  function poll(url, ok) {
+    return fetch(url, { cache: "no-store" })
+      .then(function (r) { return r.json().then(function (d) { return { http: r.status, body: d }; }); })
+      .then(function (res) { return ok(res); });
+  }
+
+  // Phase 1: wait for the payment to land.
+  function waitForPayment() {
+    setBusy("Confirming your payment…", "Hang tight — checking with Stripe.");
+    (function tick() {
+      poll(PAY_STATUS, function (res) {
+        if (res.body && res.body.ok && res.body.paid) { waitForBuild(); return; }
+        if (Date.now() - started > PAY_TIMEOUT) {
+          setError("Still waiting on payment confirmation.",
+            "If you just paid, give it another minute and refresh. If you were charged and this persists, email info@mehyar.us and we'll sort it out.",
+            '<button class="btn btn-ghost" onclick="location.reload()">Refresh</button>');
+          return;
+        }
+        setTimeout(tick, 4000);
+      }).catch(function () { setTimeout(tick, 6000); });
+    })();
+  }
+
+  // Phase 2: wait for the playbook PDF.
+  var buildStart = 0;
+  function waitForBuild() {
+    buildStart = Date.now();
+    setBusy("Building your playbook…", "Personalizing every section for your household — usually a few minutes.");
+    (function tick() {
+      poll(PG_STATUS, function (res) {
+        var d = res.body || {};
+        if (d.ok && d.status === "ready") {
+          pageSub.textContent = "Done — your personalized playbook is ready. Download it, print it, stick it in your go-bag.";
+          setDone("Your playbook is ready. 📕",
+            "Print-ready PDF, built for your household.",
+            '<a class="btn btn-primary download-btn" href="/api/prepguide/deliverable?token=' + encodeURIComponent(token) + '">Download my playbook (PDF)</a>');
+          return;
+        }
+        if (d.ok && d.status === "failed") {
+          setError("The build hit a snag.",
+            "Nothing was lost — your payment is confirmed. Tap below and we'll build it again.",
+            '<button class="btn btn-primary" id="retry-btn">Build my playbook again</button>');
+          document.getElementById("retry-btn").addEventListener("click", retryBuild);
+          return;
+        }
+        if (Date.now() - buildStart > BUILD_TIMEOUT) {
+          setError("This is taking longer than usual.",
+            "Your payment is confirmed. Tap below to nudge the build, or email info@mehyar.us.",
+            '<button class="btn btn-primary" id="retry-btn">Check again</button>');
+          document.getElementById("retry-btn").addEventListener("click", function () { buildStart = Date.now(); tick(); });
+          return;
+        }
+        setTimeout(tick, 5000);
+      }).catch(function () { setTimeout(tick, 7000); });
+    })();
+  }
+
+  function retryBuild() {
+    setBusy("Rebuilding your playbook…", "Giving it another go — a few minutes.");
+    buildStart = Date.now();
+    fetch("/api/prepguide/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order_token: token }),
+    }).finally(function () { waitForBuild(); });
+  }
+
+  waitForPayment();
+})();
+</script>
+</body>
+</html>

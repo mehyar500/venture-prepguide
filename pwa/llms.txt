@@ -1,0 +1,30 @@
+# PrepGuide
+
+PrepGuide builds you a personalized emergency-preparedness playbook. Answer a few questions about your household and get a free 72-hour checklist instantly; the full playbook is $37 one-time.
+
+## What you get
+
+- **Free teaser:** personalized 72-hour kit checklist + your household's water math.
+- **Full playbook ($37):** 72-hour kit checklist, water-storage math, 30-day food plan, power-outage playbook, and a prioritized buy list matched to your budget tier — delivered as a print-ready PDF.
+
+## How it works
+
+1. Fill in the intake form (household size, home type, region, budget).
+2. Get your free checklist instantly.
+3. Pay $37 through secure Stripe checkout.
+4. Your personalized PDF builds in a few minutes; download it from your private link.
+
+## Tone
+
+Practical, calm, specific. Never fear-mongering.
+
+## Links
+
+- Home: https://prepguide.mehyar.us/
+- Privacy: https://prepguide.mehyar.us/privacy.html
+- Terms: https://prepguide.mehyar.us/terms.html
+- Support: info@mehyar.us
+
+## Refunds
+
+7-day regenerate-or-refund: if the playbook isn't useful, email info@mehyar.us within 7 days for a free regeneration or a full refund.
