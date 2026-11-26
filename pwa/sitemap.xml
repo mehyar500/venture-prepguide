@@ -7,4 +7,9 @@
   <url><loc>https://prepguide.mehyar.us/72-hour-ready/</loc><lastmod>2026-11-22</lastmod></url>
   <url><loc>https://prepguide.mehyar.us/ready-for-christmas/</loc><lastmod>2026-11-24</lastmod></url>
   <url><loc>https://prepguide.mehyar.us/black-friday-ready-deals/</loc><lastmod>2026-11-26</lastmod></url>
+  <url>
+    <loc>https://prepguide.mehyar.us/christmas-home-quiz/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
